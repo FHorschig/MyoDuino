@@ -1,0 +1,56 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+apply plugin: 'com.android.application'
+
+
+def gitSha() {
+    return 'git rev-parse --short HEAD'.execute().text.trim()
+}
+
+
+android {
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
+
+    defaultConfig {
+        applicationId "de.hpi.student.robotmyoarm"
+        minSdkVersion 18
+        targetSdkVersion 22
+        versionCode 12
+        versionName "1.1.1"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        applicationVariants.all { variant ->
+            if (variant.buildType.name == "release") {
+                variant.outputs.each { output ->
+                    def file = output.outputFile
+                    output.outputFile = new File(file.parent, "Robot_Myo_Arm-v" + defaultConfig.versionName + "-" + defaultConfig.versionCode + "-" + gitSha() + ".apk")
+                }
+            }
+        }
+    }
+
+    sourceSets.main {
+        jniLibs.srcDir 'libs' //set libs as .so's location instead of jni
+        jni.srcDirs = [] //disable automatic ndk-build call with auto-generated Android.mk file
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    repositories {
+        maven {
+            url '../myo_sdk/myorepository'
+        }
+    }
+    compile 'com.thalmic:myosdk:0.10.0@aar'
+}
