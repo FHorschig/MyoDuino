@@ -56,7 +56,7 @@ void setup()
   digitalWrite(MOTOR_A_2, LOW);
 }
 
-void controlMotor(byte data) {
+void manualMotorControl(byte data) {
   if (data == MOTOR_CLOCKWISE) {
     digitalWrite(MOTOR_A_1, HIGH);
     digitalWrite(MOTOR_A_2, LOW);
@@ -73,12 +73,18 @@ void handleGesture(byte gesture) {
   switch (gesture) {
     case GESTURE_NONE:
       Serial.println("No Gesture");
+      digitalWrite(MOTOR_A_1, LOW);
+      digitalWrite(MOTOR_A_2, LOW);
     break;
     case GESTURE_FIST:
       Serial.println("Gesture: Fist");
+      digitalWrite(MOTOR_A_1, LOW);
+      digitalWrite(MOTOR_A_2, HIGH);
     break;
     case GESTURE_SPREAD:
       Serial.println("Gesture: Spread Fingers");
+      digitalWrite(MOTOR_A_2, LOW);
+      digitalWrite(MOTOR_A_1, HIGH);
     break;
     case GESTURE_WAVE_IN:
       Serial.println("Gesture: Wave In");
@@ -103,12 +109,10 @@ void loop()
     byte data1 = ble_read();
     byte data2 = ble_read();
 
-        digitalWrite(MOTOR_A_1, LOW);
-        digitalWrite(MOTOR_A_2, LOW);
     if (op_code == CMD_MOTOR_CONTROL)
     {
       Serial.println("Motor control OP code");
-      controlMotor(data1);
+      manualMotorControl(data1);
     }
     else if (op_code == CMD_SET_LIGHT_TRANSMIT)
     {
@@ -118,7 +122,6 @@ void loop()
     else if (op_code == CMD_NEW_GESTURE)
     {
       Serial.println("New Gesture OP code");
-      // TODO(fhorschig): Handle data1 and data2 accordingly.
       handleGesture(data1);
     }
     else if (op_code == CMD_RESET)
