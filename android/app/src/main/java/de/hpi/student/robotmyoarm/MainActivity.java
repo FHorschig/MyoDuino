@@ -46,6 +46,27 @@ import java.util.TimerTask;
 public class MainActivity extends Activity {
     private final static String TAG = MainActivity.class.getSimpleName();
 
+
+    private final static byte CMD_SET_LIGHT_TRANSMIT = (byte) 0xA0;
+    private final static byte CMD_MOTOR_CONTROL = 0x01;
+    private final static byte CMD_NEW_GESTURE = 0x02;
+    private final static byte CMD_RESET = 0x04;
+
+    private final static byte OUT_LIGHT_TRANSMIT = (byte) 0x0B;
+
+    private final static byte TRUE = 0x01;
+    private final static byte FALSE = 0x00;
+
+    private final static byte GESTURE_NONE = 0x00;
+    private final static byte GESTURE_FIST = 0x01;
+    private final static byte GESTURE_SPREAD = 0x02;
+    private final static byte GESTURE_WAVE_IN = 0x03;
+    private final static byte GESTURE_WAVE_OUT = 0x04;
+
+    private final static byte MOTOR_CLOCKWISE = 0x01;
+    private final static byte MOTOR_COUNTERCLOCK = 0x02;
+
+
     private Button connectBtn = null;
     private TextView rssiValue = null;
     private TextView AnalogInValue = null;
@@ -177,6 +198,7 @@ public class MainActivity extends Activity {
         public void onPose(Myo myo, long timestamp, Pose pose) {
             // Handle the cases of the Pose enumeration, and change the text of the text view
             // based on the pose we receive.
+            byte payload[] = new byte[] { CMD_NEW_GESTURE, GESTURE_NONE, (byte) 0x00 };
             switch (pose) {
                 case UNKNOWN:
                     mTextView.setText(getString(R.string.unsynced));
@@ -196,17 +218,23 @@ public class MainActivity extends Activity {
                     break;
                 case FIST:
                     mTextView.setText(getString(R.string.pose_fist));
+                    payload[1] = GESTURE_FIST;
                     break;
                 case WAVE_IN:
                     mTextView.setText(getString(R.string.pose_wavein));
+                    payload[1] = GESTURE_WAVE_IN;
                     break;
                 case WAVE_OUT:
                     mTextView.setText(getString(R.string.pose_waveout));
+                    payload[1] = GESTURE_WAVE_OUT;
                     break;
                 case FINGERS_SPREAD:
                     mTextView.setText(getString(R.string.pose_fingersspread));
+                    payload[1] = GESTURE_SPREAD;
                     break;
             }
+            characteristicTx.setValue(payload);
+            mBluetoothLeService.writeCharacteristic(characteristicTx);
             if (pose != Pose.UNKNOWN && pose != Pose.REST) {
                 // Tell the Myo to stay unlocked until told otherwise. We do that here so you can
                 // hold the poses without the Myo becoming locked.
@@ -289,12 +317,12 @@ public class MainActivity extends Activity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
-                byte buf[] = new byte[] { (byte) 0x01, (byte) 0x00, (byte) 0x00 };
+                byte buf[] = new byte[] { CMD_MOTOR_CONTROL, (byte) 0x00, (byte) 0x00 };
 
                 if (isChecked == true)
-                    buf[1] = 0x01;
+                    buf[1] = TRUE;
                 else
-                    buf[1] = 0x00;
+                    buf[1] = FALSE;
 
                 characteristicTx.setValue(buf);
                 mBluetoothLeService.writeCharacteristic(characteristicTx);
@@ -307,12 +335,12 @@ public class MainActivity extends Activity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
-                byte[] buf = new byte[] { (byte) 0xA0, (byte) 0x00, (byte) 0x00 };
+                byte[] buf = new byte[] { CMD_SET_LIGHT_TRANSMIT, (byte) 0x00, (byte) 0x00 };
 
                 if (isChecked == true)
-                    buf[1] = 0x01;
+                    buf[1] = TRUE;
                 else
-                    buf[1] = 0x00;
+                    buf[1] = FALSE;
 
                 characteristicTx.setValue(buf);
                 mBluetoothLeService.writeCharacteristic(characteristicTx);
@@ -500,15 +528,13 @@ public class MainActivity extends Activity {
     private void readAnalogInValue(byte[] data) {
         for (int i = 0; i < data.length; i += 3) {
             if (data[i] == 0x0A) {
-                if (data[i + 1] == 0x01)
+                if (data[i + 1] == TRUE)
                     digitalInBtn.setChecked(false);
                 else
                     digitalInBtn.setChecked(true);
-            } else if (data[i] == 0x0B) {
-                int Value;
-
-                Value = ((data[i + 1] << 8) & 0x0000ff00)
-                        | (data[i + 2] & 0x000000ff);
+            } else if (data[i] == OUT_LIGHT_TRANSMIT) {
+                int Value = ((data[i + 1] << 8) & 0x0000ff00) |
+                             (data[i + 2]       & 0x000000ff);
 
                 AnalogInValue.setText(Value + "");
             }
