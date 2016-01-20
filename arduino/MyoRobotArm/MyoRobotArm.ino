@@ -28,7 +28,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 void setup()
 {
-  ble_set_name("MyoRobotArm");
+  //ble_set_name("MyoRobotArm");
 
   // Init. and start BLE library.
   ble_begin();
