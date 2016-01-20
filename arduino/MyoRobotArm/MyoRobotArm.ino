@@ -39,14 +39,111 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #define MOTOR_CLOCKWISE 0x01
 #define MOTOR_COUNTERCLOCK 0x02
 
-void setup()
-{
-  //ble_set_name("MyoRobotArm");
 
+#define CLOSING_THRESHOLD 50
+
+uint16_t light_sensor;
+boolean can_close = false;
+
+#include <NilTimer1.h>
+#include <NilSerial.h>
+#define Serial NilSerial // Redefine Serial as NilSerial to save RAM.
+
+// Declare a stack with 64 bytes beyond context switch and interrupt needs.
+NIL_WORKING_AREA(waBleReceivingThread, 64);
+
+// Declare thread function for thread 1.
+NIL_THREAD(BleReceivingThread, arg) {
   // Init. and start BLE library.
   ble_begin();
 
-  // Enable serial debug
+  while (TRUE) {
+    static boolean transmit_light_sensor = false;
+
+    // If data is ready
+    while (ble_available())
+    {
+      // read out command and data
+      byte op_code = ble_read();
+      byte data1 = ble_read();
+      byte data2 = ble_read();
+
+      if (op_code == CMD_MOTOR_CONTROL)
+      {
+        Serial.println("Motor control OP code");
+        manualMotorControl(data1);
+      }
+      else if (op_code == CMD_SET_LIGHT_TRANSMIT)
+      {
+        Serial.println("Light Transmit OP code");
+        transmit_light_sensor = (data1 == TRUE);
+      }
+      else if (op_code == CMD_NEW_GESTURE)
+      {
+        Serial.println("New Gesture OP code");
+        handleGesture(data1);
+      }
+      else if (op_code == CMD_RESET)
+      {
+        transmit_light_sensor = false;
+        digitalWrite(MOTOR_A_1, LOW);
+        digitalWrite(MOTOR_A_2, LOW);
+      }
+    }
+
+    if (transmit_light_sensor)  // if analog reading enabled
+    {
+      ble_write(OUT_LIGHT_TRANSMIT);
+      ble_write(light_sensor >> 8); // Even if values change: this transmission
+      ble_write(light_sensor);      // is not important enough to get a mutex.
+    }
+
+    if (!ble_connected())
+    {
+      transmit_light_sensor = false;
+      digitalWrite(MOTOR_A_1, LOW);
+      digitalWrite(MOTOR_A_2, LOW);
+    }
+
+    // Allow BLE Shield to send/receive data
+    ble_do_events();
+  }
+}
+// Declare a stack with 64 bytes beyond context switch and interrupt needs.
+NIL_WORKING_AREA(waSensorReadingThread, 16);
+
+// Declare thread function for thread 2.
+NIL_THREAD(SensorReadingThread, arg) {
+  nilTimer1Start(400000);  // Execute while loop every 0.4 seconds.
+
+  while (TRUE) {
+    light_sensor = analogRead(ANALOG_IN_PIN);
+    can_close = light_sensor > CLOSING_THRESHOLD;
+    if (!can_close)
+      digitalWrite(MOTOR_A_2, LOW); // A_2 is only high if closing right now.
+    nilTimer1Wait();
+  }
+}
+//------------------------------------------------------------------------------
+/*
+ * Threads static table, one entry per thread.  A thread's priority is
+ * determined by its position in the table with highest priority first.
+ *
+ * These threads start with a null argument.  A thread's name is also
+ * null to save RAM since the name is currently not used.
+ */
+NIL_THREADS_TABLE_BEGIN()
+NIL_THREADS_TABLE_ENTRY(NULL, SensorReadingThread,
+                        NULL, waSensorReadingThread,
+                        sizeof(waSensorReadingThread))
+NIL_THREADS_TABLE_ENTRY(NULL, BleReceivingThread,
+                        NULL, waBleReceivingThread,
+                        sizeof(waBleReceivingThread))
+NIL_THREADS_TABLE_END()
+//------------------------------------------------------------------------------
+
+void setup()
+{
   Serial.begin(9600);
 
   pinMode(MOTOR_A_1, OUTPUT);
@@ -54,6 +151,9 @@ void setup()
 
   digitalWrite(MOTOR_A_1, LOW);
   digitalWrite(MOTOR_A_2, LOW);
+
+  // start kernel
+  nilSysBegin();
 }
 
 void manualMotorControl(byte data) {
@@ -79,7 +179,8 @@ void handleGesture(byte gesture) {
     case GESTURE_FIST:
       Serial.println("Gesture: Fist");
       digitalWrite(MOTOR_A_1, LOW);
-      digitalWrite(MOTOR_A_2, HIGH);
+      if (can_close)
+        digitalWrite(MOTOR_A_2, HIGH); // A_2 is only high if closing right now.
     break;
     case GESTURE_SPREAD:
       Serial.println("Gesture: Spread Fingers");
@@ -97,58 +198,11 @@ void handleGesture(byte gesture) {
   }
 }
 
-void loop()
-{
-  static boolean transmit_light_sensor = false;
-
-  // If data is ready
-  while(ble_available())
-  {
-    // read out command and data
-    byte op_code = ble_read();
-    byte data1 = ble_read();
-    byte data2 = ble_read();
-
-    if (op_code == CMD_MOTOR_CONTROL)
-    {
-      Serial.println("Motor control OP code");
-      manualMotorControl(data1);
-    }
-    else if (op_code == CMD_SET_LIGHT_TRANSMIT)
-    {
-      Serial.println("Light Transmit OP code");
-      transmit_light_sensor = (data1 == TRUE);
-    }
-    else if (op_code == CMD_NEW_GESTURE)
-    {
-      Serial.println("New Gesture OP code");
-      handleGesture(data1);
-    }
-    else if (op_code == CMD_RESET)
-    {
-      transmit_light_sensor = false;
-      digitalWrite(MOTOR_A_1, LOW);
-      digitalWrite(MOTOR_A_2, LOW);
-    }
-  }
-
-  if (transmit_light_sensor)  // if analog reading enabled
-  {
-    uint16_t value = analogRead(ANALOG_IN_PIN);
-    ble_write(OUT_LIGHT_TRANSMIT);
-    ble_write(value >> 8);
-    ble_write(value);
-  }
-
-  if (!ble_connected())
-  {
-    transmit_light_sensor = false;
-    digitalWrite(MOTOR_A_1, LOW);
-    digitalWrite(MOTOR_A_2, LOW);
-  }
-
-  // Allow BLE Shield to send/receive data
-  ble_do_events();
+//------------------------------------------------------------------------------
+// Loop is the idle thread.  The idle thread must not invoke any
+// kernel primitive able to change its state to not runnable.
+void loop() {
+  // Not used but must exist in order to compile.
 }
 
 

@@ -142,7 +142,7 @@ public class MainActivity extends Activity {
         @Override
         public void onConnect(Myo myo, long timestamp) {
             // Set the text color of the text view to cyan when a Myo connects.
-            mTextView.setTextColor(Color.GREEN);
+            mTextView.setTextColor(Color.BLACK);
         }
         // onDisconnect() is called whenever a Myo has been disconnected.
         @Override
@@ -173,7 +173,7 @@ public class MainActivity extends Activity {
         // policy, that means poses will no longer be delivered to the listener.
         @Override
         public void onLock(Myo myo, long timestamp) {
-            mLockStateView.setText(R.string.locked);
+            myo.unlock(Myo.UnlockType.HOLD);
         }
         // onOrientationData() is called whenever a Myo provides its current orientation,
         // represented as a quaternion.
@@ -242,10 +242,6 @@ public class MainActivity extends Activity {
                 // Notify the Myo that the pose has resulted in an action, in this case changing
                 // the text on the screen. The Myo will vibrate.
                 myo.notifyUserAction();
-            } else {
-                // Tell the Myo to stay unlocked only for a short period. This allows the Myo to
-                // stay unlocked while poses are being performed, but lock after inactivity.
-                myo.unlock(Myo.UnlockType.TIMED);
             }
         }
     };
