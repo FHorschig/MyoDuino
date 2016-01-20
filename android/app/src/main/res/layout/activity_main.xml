@@ -21,13 +21,15 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="Scan for Myo"
-            android:id="@+id/scan_myo" />
+            android:id="@+id/scan_myo"
+            android:height="80dp" />
 
         <TextView
             android:id="@+id/lock_state"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Locked" />
+            android:text="Locked"
+            android:gravity="center" />
 
         <TextView
             android:id="@+id/text"
@@ -37,7 +39,8 @@
             android:textSize="10dp"
             android:textIsSelectable="true"
             android:singleLine="false"
-            android:gravity="center" />
+            android:gravity="center"
+            android:height="80dp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -176,12 +179,14 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@android:color/darker_gray" />
+            android:background="@android:color/darker_gray"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:orientation="horizontal" >
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -189,7 +194,8 @@
                 android:layout_weight="1"
                 android:paddingBottom="20dp"
                 android:paddingLeft="20dp"
-                android:paddingTop="20dp" >
+                android:paddingTop="20dp"
+                android:visibility="gone">
 
                 <TextView
                     android:id="@+id/digitalIn"
@@ -202,7 +208,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:orientation="horizontal" >
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -236,7 +243,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:padding="15dp" >
+                android:padding="15dp"
+                android:visibility="gone">
 
                 <ToggleButton
                     android:id="@+id/DIntBtn"
@@ -251,12 +259,14 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@android:color/darker_gray" />
+            android:background="@android:color/darker_gray"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:orientation="horizontal" >
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -324,12 +334,14 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@android:color/darker_gray" />
+            android:background="@android:color/darker_gray"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:orientation="horizontal" >
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -397,12 +409,14 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@android:color/darker_gray" />
+            android:background="@android:color/darker_gray"
+            android:visibility="visible" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:orientation="horizontal" >
+            android:orientation="horizontal"
+            android:visibility="visible">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -500,8 +514,9 @@
             android:id="@+id/connect"
             style="@style/button_text"
             android:layout_width="fill_parent"
-            android:layout_height="50dp"
-            android:text="@string/connect" />
+            android:layout_height="100dp"
+            android:text="@string/connect"
+            android:height="80dp" />
 
     </LinearLayout>
 </RelativeLayout>
