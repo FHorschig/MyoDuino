@@ -233,8 +233,10 @@ public class MainActivity extends Activity {
                     payload[1] = GESTURE_SPREAD;
                     break;
             }
-            characteristicTx.setValue(payload);
-            mBluetoothLeService.writeCharacteristic(characteristicTx);
+            if (characteristicTx != null && mBluetoothLeService != null) {
+                characteristicTx.setValue(payload);
+                mBluetoothLeService.writeCharacteristic(characteristicTx);
+            }
             if (pose != Pose.UNKNOWN && pose != Pose.REST) {
                 // Tell the Myo to stay unlocked until told otherwise. We do that here so you can
                 // hold the poses without the Myo becoming locked.
