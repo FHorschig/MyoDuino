@@ -109,7 +109,7 @@ NIL_THREAD(BleReceivingThread, arg) {
     ble_do_events();
   }
 }
-// Declare a stack with 64 bytes beyond context switch and interrupt needs.
+// Declare a stack with 16 bytes beyond context switch and interrupt needs.
 NIL_WORKING_AREA(waSensorReadingThread, 16);
 
 // Declare thread function for thread 2.
